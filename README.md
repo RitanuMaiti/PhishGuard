@@ -1,6 +1,6 @@
 # PhishGuard
 
-AI-assisted phishing URL detection system that combines machine learning, URL-structure analysis, rule-based signals, and Gemini AI to assess suspicious URLs without loading the destination.
+AI-assisted phishing URL detection system that combines machine learning, URL-structure analysis, rule-based security signals, and Gemini AI to assess suspicious URLs without loading the destination.
 
 ## Overview
 
@@ -9,7 +9,7 @@ PhishGuard analyzes a URL using multiple layers of detection:
 1. **Machine Learning** — predicts the probability that a URL is phishing.
 2. **URL Feature Extraction** — extracts structural characteristics such as domain length, subdomains, digits, hyphens, entropy, URL encoding, and suspicious keywords.
 3. **Rule-Based Risk Analysis** — generates interpretable security signals from the URL structure.
-4. **Gemini AI Analysis** — provides contextual analysis of the URL and can identify cases where the ML model produces a false positive or false negative.
+4. **Gemini AI Analysis** — provides contextual analysis of the URL and can provide a different assessment when the ML model is overly confident.
 5. **Risk Fusion** — combines the available evidence, with the AI analysis given higher priority when available.
 6. **React Frontend** — presents the final threat assessment, risk score, ML probability, and investigation signals.
 
@@ -24,7 +24,7 @@ PhishGuard is designed to analyze URLs **without visiting or loading the destina
 * Risk score from 0–100
 * Threat levels: LOW, MEDIUM, HIGH
 * ML phishing probability
-* Detection of suspicious URL characteristics
+* Suspicious URL characteristic detection
 * URL feature extraction
 * REST API using FastAPI
 * React + Vite frontend
@@ -32,59 +32,58 @@ PhishGuard is designed to analyze URLs **without visiting or loading the destina
 * Analysis history
 * Responsive investigation interface
 * CORS-enabled frontend/backend communication
-* API-key configuration through environment variables
+* Environment-variable based API key configuration
 
 ## Detection Pipeline
 
 ```text
-                    URL
-                     |
-                     v
-            URL Feature Extraction
-                     |
-          +----------+----------+
-          |                     |
-          v                     v
-     ML Classifier       Rule-Based Analysis
-          |                     |
-          |                     |
-          +----------+----------+
-                     |
-                     v
-               Gemini AI
-             Analysis Layer
-                     |
-                     v
-              Risk Fusion
-                     |
-                     v
-             Final Assessment
-                     |
-                     v
-              React Frontend
+                         User
+                           |
+                           v
+                   React + Vite
+                           |
+                         HTTPS
+                           |
+                           v
+                   FastAPI Backend
+                           |
+              +------------+------------+
+              |            |            |
+              v            v            v
+             ML       Rule Engine   Gemini AI
+              |            |            |
+              +------------+------------+
+                           |
+                           v
+                      Risk Fusion
+                           |
+                           v
+                  Final Assessment
+                           |
+                           v
+                    React Frontend
 ```
 
 ## AI + ML Approach
 
 The ML model provides a statistical classification based on engineered URL features.
 
-Gemini acts as an additional intelligence layer that evaluates the URL structure and the supplied local analysis data.
+The rule-based layer provides interpretable security signals based on characteristics found within the URL.
 
-This allows PhishGuard to handle situations where the ML model may produce an overly confident prediction.
+Gemini acts as an additional intelligence layer that evaluates the URL structure together with the locally generated analysis.
 
-For example, during testing:
+The AI layer is instructed to:
 
-```text
-URL: https://drive.google.com
+* Analyze only the supplied URL and local analysis data
+* Avoid visiting, browsing, or resolving the destination
+* Avoid inventing external information
+* Treat HTTPS as a transport-security indicator rather than proof of legitimacy
+* Consider suspicious URL structure, domain characteristics, subdomains, encoding, keywords, paths, queries, and other available evidence
+* Provide an assessment even when it differs from the ML model
 
-ML phishing probability: 99.00%+
-Gemini assessment:       Legitimate
-Final detection:         LEGITIMATE
-Final risk:              10/100
-Risk level:              LOW
-```
+When Gemini is available, its assessment is given higher priority in determining the final prediction.
 
-This demonstrates how the AI layer can provide contextual reasoning when the ML model produces a false positive.
+When Gemini is unavailable, PhishGuard falls back to its ML and rule-based analysis.
 
 ## Important Safety Design
 
@@ -97,9 +96,17 @@ The Gemini analysis is also instructed to reason only from:
 * Rule-based signals
 * ML output
 
-It does not rely on automatically browsing the destination.
+It does not automatically rely on:
 
-Therefore, claims about external properties such as WHOIS information, DNS records, website contents, domain reputation, hosting information, or blacklist status are not assumed unless that information is explicitly provided to the system.
+* WHOIS information
+* DNS records
+* Website contents
+* Domain reputation
+* Hosting information
+* External blacklists
+* Redirect chains
+
+These properties are not assumed unless the relevant information is explicitly provided to the system.
 
 ## Technology Stack
 
@@ -114,6 +121,7 @@ Therefore, claims about external properties such as WHOIS information, DNS recor
 * Joblib
 * Pydantic
 * Google Gemini API
+* tldextract
 
 ### Frontend
 
@@ -121,6 +129,12 @@ Therefore, claims about external properties such as WHOIS information, DNS recor
 * Vite
 * JavaScript
 * CSS
+
+### Deployment
+
+* Netlify — frontend hosting
+* Render — backend hosting
+* GitHub — source control
 
 ### Machine Learning
 
@@ -143,7 +157,12 @@ The project uses engineered URL features including:
 * Subdomain characteristics
 * Numeric domains
 * Suspicious keywords
-* Login/verification/account/security/update/payment indicators
+* Login indicators
+* Verification indicators
+* Account indicators
+* Security indicators
+* Update indicators
+* Payment indicators
 
 ## Project Structure
 
@@ -178,9 +197,9 @@ PhishGuard/
 │
 ├── tests/
 │
-├── .env
 ├── .gitignore
-└── requirements.txt
+├── requirements.txt
+└── README.md
 ```
 
 ## Installation
@@ -217,7 +236,7 @@ GEMINI_API_KEY=your_api_key_here
 
 Do not commit the `.env` file.
 
-It is already excluded through `.gitignore`.
+It is excluded through `.gitignore`.
 
 ## Running the Backend
 
@@ -291,6 +310,8 @@ A successful analysis returns information including:
 }
 ```
 
+> The example above illustrates the response structure. Actual values depend on the URL being analyzed.
+
 ## Risk Levels
 
 | Risk Score | Level  |
@@ -317,8 +338,9 @@ Potential limitations include:
 * Lack of DNS/WHOIS information
 * Lack of webpage-content analysis
 * Dependence on Gemini availability and quota
+* AI analysis being limited to the information supplied to the system
 
-When Gemini is unavailable, PhishGuard falls back to its existing ML and rule-based analysis.
+PhishGuard should therefore be treated as an additional security layer rather than a definitive source of truth.
 
 ## Future Improvements
 
