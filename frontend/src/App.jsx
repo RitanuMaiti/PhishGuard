@@ -27,7 +27,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-const API_URL = "http://localhost:8000/api/analyze";
+const API_URL = "https://phishguard-api-2sgj.onrender.com/api/analyze";
 const VERSION = "1.0.0";
 const HISTORY_KEY = "phishguard_history";
 
